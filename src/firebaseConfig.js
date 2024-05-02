@@ -9,8 +9,11 @@ import { getStorage } from  'firebase/storage';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+const VARIABLE_NAME = import.meta.env.VITE_GOOGLE_API_KEY;
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBh7-h8MP7QkjbwHZ0oWMtXYG2oKgP513E",
+  apiKey: VARIABLE_NAME, //swap with the google api key in quotes "".
   authDomain: "linkedin-clone-3511b.firebaseapp.com",
   projectId: "linkedin-clone-3511b",
   storageBucket: "linkedin-clone-3511b.appspot.com",
