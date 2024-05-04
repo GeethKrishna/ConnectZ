@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import "./index.scss";
-import LinkedinLogo from "../../../assets/LinkedinLogo.png";
+import Logo from "../../../assets/LogoZ.png";
 import { useNavigate } from 'react-router-dom';
 import { AiOutlineHome, AiOutlineMessage } from "react-icons/ai";
 import { HiOutlineUsers } from "react-icons/hi2";
@@ -64,7 +64,7 @@ export default function Topbar({ currentUser }) {
       ) : (
         <></>
       )}
-      <img src={LinkedinLogo} alt="linkedin logo" className='LinkedinLogo'/>
+      <img src={Logo} alt="linkedin logo" className='LinkedinLogo'/>
       {isSearch ?  <SearchUsers setIsSearch={setIsSearch} setSearchInput={setSearchInput} /> :
         <div className='reactIcons'>
             <RiSearchLine size={25} className='react-icon' onClick={() => setIsSearch(!isSearch)} />

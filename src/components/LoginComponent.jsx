@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import LinkedinLogo from "../assets/LinkedinLogo.png"
+import { useState } from 'react';
+import Logo from "../assets/LogoZ.png"
 import GoogleButton from 'react-google-button';
 import { LoginApi, GoogleSigninApi } from "../api/AuthApi";
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,10 @@ export default function LoginComponent() {
   };
   return (
     <div className='login-wrapper'>
-      <img src={LinkedinLogo} className='LinkedinLogo'/>
+      <div className='welcome'>
+        <img src={Logo} className='LinkedinLogo'/>
+        <h2>Welcome Back to ConnectZ</h2>
+      </div>
       <div className='login-wrapper-inner'>
         <h1 className='heading'>Login</h1>
         <p className='subheading'>Login to your proffessional world.</p>

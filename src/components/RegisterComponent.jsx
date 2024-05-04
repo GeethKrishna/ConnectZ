@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import LinkedinLogo from "../assets/LinkedinLogo.png"
+import { useState } from 'react';
+import Logo from "../assets/LogoZ.png"
 import GoogleButton from 'react-google-button';
 import { RegisterApi, GoogleSigninApi } from "../api/AuthApi";
 import { postUserData } from '../api/FirestoreApi';
 import { useNavigate } from 'react-router-dom';
-import { getUniqueId } from "../helpers/getUniqueId";
 import "../Sass/LoginComponent.scss"; 
 import { toast } from 'react-toastify';
 
@@ -50,7 +49,10 @@ export default function RegisterComponent() {
   };
   return (
     <div className='login-wrapper'>
-      <img src={LinkedinLogo} className='LinkedinLogo'/>
+      <div className='welcome'>
+        <img src={Logo} className='LinkedinLogo'/>
+        <h2>Welcome to ConnectZ</h2>
+      </div>
       <div className='login-wrapper-inner'>
         <h1 className='heading'>Join us</h1>
         <p className='subheading'>Join us into our proffessional world.</p>

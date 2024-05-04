@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import "./index.scss";
 import EmojiPicker from 'emoji-picker-react';
 import { arrayUnion, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -6,8 +6,12 @@ import { firestore } from '../../../firebaseConfig';
 import { useChatStore } from '../../../ZusStores/ChatStore';
 import { useUserStore } from '../../../ZusStores/UserStore';
 import { uploadChatImage } from '../../../api/ImageUpload';
+import { useNavigate } from 'react-router-dom';
 
 function Chat() {
+
+  const navigate = useNavigate();
+
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [chatText, setChatText] = useState("");
   const [image, setImage] = useState({
@@ -109,9 +113,23 @@ function Chat() {
     <div className='chat'>
         <div className='top'>
           <div className='user'>
-            <img src={user?.imageLink || "src/assets/avatar.png"} alt="" />
+            <img 
+              src={user?.imageLink || "src/assets/avatar.png"} 
+              alt="" 
+              onClick={() =>
+                navigate("/profile", {
+                  state: { id: user.userID, email: user.email },
+                })
+              }
+            />
             <div className='texts'>
-              <h4>{user?.name || "User"}</h4>
+              <h4 
+                onClick={() =>
+                  navigate("/profile", {
+                    state: { id: user.userID, email: user.email },
+                  })
+                }
+              >{user?.name || "User"}</h4>
               {/* <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p> */}
             </div>
           </div>
@@ -129,7 +147,7 @@ function Chat() {
               <div className='texts'>
               {message.imageURL && <img src={message.imageURL} alt="" /> }
                 <p>{message.text}</p>
-                <span>1 min ago</span>
+                <span>{new Date(message.createdAt.seconds*1000 + message.createdAt.nanoseconds/1000000).toLocaleString()}</span>
               </div>
           </div>
           ))}

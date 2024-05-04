@@ -7,7 +7,10 @@ import { addDoc,
         query,
         where,
         setDoc,
-        deleteDoc} from "firebase/firestore"
+        deleteDoc,
+        getDoc,
+        serverTimestamp,
+        arrayUnion} from "firebase/firestore"
 import { toast } from "react-toastify";
 
 let postsRef = collection(firestore, "posts");
@@ -15,6 +18,8 @@ let userRef = collection(firestore, "users");
 let likeRef = collection(firestore, "likes");
 let commentRef = collection(firestore,"comments");
 let connectionsRef = collection(firestore,"connections");
+let chatsRef = collection(firestore,"chats");
+let userChatsRef = collection(firestore,"userChats");
 
 export const PostStatustoDB = (object) => {
     addDoc(postsRef, object)
@@ -226,4 +231,54 @@ export const getConnectionedUsersId = (userId, setConnectedUsers ) => {
     catch(err){
         console.log(err);
     }
+};
+
+export const findUserInChats = async (userId, targetId, setUserChat ) => {
+    try{
+        await onSnapshot(doc(firestore, "userChats", userId), (doc) => {
+            const userChat = doc.data();
+            const chat = userChat.chats.find((c) => c.receiverID === targetId );
+            //console.log(chat);
+            setUserChat(chat);
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+};
+
+export const addChatToChat = async (currentUser, currentProfile, setUserChat ) => {
+
+    try{
+      const newChatRef = doc(chatsRef);
+
+      await setDoc(newChatRef,{
+        createdAt: serverTimestamp(),
+        messages: [],
+      });
+
+      setUserChat(newChatRef.id);
+      
+      await updateDoc(doc(userChatsRef,currentProfile.id),{
+        chats:arrayUnion({
+          chatID: newChatRef.id,
+          lastMessage:"",
+          receiverID: currentUser.userID,
+          updatedAt: Date.now()
+        }),
+      });
+
+      await updateDoc(doc(userChatsRef,currentUser.userID),{
+        chats:arrayUnion({
+          chatID: newChatRef.id,
+          lastMessage:"",
+          receiverID: currentProfile.id,
+          updatedAt: Date.now()
+        }),
+      });
+    }
+    catch(err){
+      console.log(err);
+    }
+    toast.success("Added Successfully to chats !");
 };

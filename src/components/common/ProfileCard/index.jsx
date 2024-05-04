@@ -1,16 +1,20 @@
-import React, { useState, useMemo } from 'react'
-import { useLocation } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom';
 import PostsCard from "../PostsCard/index"
-import { addConnection, getSingleStatus, getSingleUser } from '../../../api/FirestoreApi';
+import { addConnection, getSingleStatus, getSingleUser, getConnections, findUserInChats, addChatToChat} from '../../../api/FirestoreApi';
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import ImageUploadModal from '../ImageUploadModal';
 import { uploadImageApi } from '../../../api/ImageUpload';
 import "./index.scss"
+import { useChatStore } from '../../../ZusStores/ChatStore';
 
 
 export default function ProfileCard({ currentUser, onEdit }) {
 
   let location = useLocation();
+  let navigate = useNavigate();
+
+  const {changeChat} = useChatStore();
 
   const [allStatus, setAllStatus] = useState([]);
   const [currentProfile, setCurrentProfile] = useState({});
@@ -18,6 +22,10 @@ export default function ProfileCard({ currentUser, onEdit }) {
   const [currentImage, setCurrentImage] = useState({});
   const [progress, setProgress] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [connected,setConnected] = useState(false);
+  const [userChat,setUserChat] = useState();
+
+
 
   const getImage = (event) =>{
     setCurrentImage(event.target.files[0]);
@@ -26,6 +34,28 @@ export default function ProfileCard({ currentUser, onEdit }) {
   const uploadImage = () => {
     //console.log(currentUser);
     uploadImageApi(currentImage, currentUser.userId, setModalOpen, setProgress, setCurrentImage);
+  };
+
+  const handleConnect = () => {
+    if (!connected){
+      addConnection(currentUser.userId,location?.state?.id);
+    }
+      else{
+        return ;
+      }
+  };
+
+  const handelMessage = async () => {
+    console.log(userChat);
+    if(userChat){
+      changeChat(userChat.chatID,currentProfile);
+      navigate('/messages');
+    }
+    else{
+      addChatToChat(currentUser,currentProfile,setUserChat);
+      changeChat(userChat.chatID,currentProfile);
+      navigate('/messages');
+    }
   };
 
   useMemo(() => {
@@ -45,6 +75,11 @@ export default function ProfileCard({ currentUser, onEdit }) {
       getSingleStatus(setAllStatus, location?.state?.id);
     }
   },[]);
+
+  useEffect(() => {
+    getConnections(currentUser.userId,location?.state?.id,setConnected);
+    findUserInChats(currentUser.userId,location?.state?.id,setUserChat)
+  }, [currentUser.userId,location?.state,connected]);
 
   return (
     <>
@@ -101,6 +136,21 @@ export default function ProfileCard({ currentUser, onEdit }) {
         <p className='user-details'>{Object.values(currentProfile).length === 0 ? currentUser.skills : currentProfile?.skills}</p>
         <h3 className='headings'>Education</h3>
         <p className='user-details'>{Object.values(currentProfile).length === 0 ? currentUser.education : currentProfile?.education}</p>
+        <div className='connect-btn'>
+        { !loginUser ?
+          
+            <button 
+              className={connected? "connected" : "connect"} 
+              onClick={handleConnect}
+              disabled = {connected}
+              >
+                {connected ? "Connected" : "Connect"}
+              </button>
+          :
+          <></>
+        }
+          <button onClick={handelMessage} className='connect'>{userChat ? "Send Message" : "Add to Message"}</button>
+        </div>
       </div>
 
       <div className='profile-posts'>

@@ -13,7 +13,7 @@ function ChatList() {
     const [input, setInput] = useState("");
 
     const {currentUserstore} = useUserStore();
-    const {chatId,changeChat} = useChatStore();
+    const {changeChat} = useChatStore();
 
     const handleSelect = async (chat) => {
         
@@ -81,7 +81,7 @@ function ChatList() {
                 <img src={chat.user.blocked.includes(currentUserstore.userID) ? "src/assets/avatar.png" : chat.user.imageLink} alt="" />
                 <div className='text'>
                     <span>{chat.user.blocked.includes(currentUserstore.userID) ? "User" : chat.user.name}</span>
-                    <p>{chat.lastMessage}</p>
+                    <p>{chat.lastMessage} - <span className='last-time'>{new Date(chat.updatedAt).toLocaleString()}</span></p>
                 </div>
                 </div>
             ))}

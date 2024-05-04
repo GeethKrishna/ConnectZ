@@ -21,6 +21,7 @@
                 height: 60px;
                 border-radius: 50%;
                 object-fit: cover;
+                cursor: pointer;
             }
             .texts{
                 display: flex;
@@ -28,13 +29,16 @@
                 span{
                     font-weight: 500;
                     font-size: 16px
-                };
+                }
                 p{
                     margin: 0;
                     font-size: 12px;
                     font-weight: 400;
                     color: rgb(156, 156, 156);
-                };
+                }
+                h4{
+                    cursor: pointer;
+                }
             }
         }
         .icons{

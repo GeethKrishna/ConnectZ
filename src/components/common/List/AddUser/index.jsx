@@ -63,7 +63,7 @@ function AddUser(){
   useEffect(()=>{
     getAllUsers(setAllUsers);
     console.log(allUsers);
-  }, []);
+  }, [allUsers]);
 
   useEffect(() =>{
     let debounced = setTimeout(() => {

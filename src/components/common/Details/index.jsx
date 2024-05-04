@@ -3,8 +3,11 @@ import { useChatStore } from "../../../ZusStores/ChatStore";
 import { useUserStore } from "../../../ZusStores/UserStore";
 import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
 import { firestore } from "../../../firebaseConfig";
+import { useNavigate } from "react-router-dom";
 
 function Details() {
+
+  const navigate = useNavigate();
 
   const {user, isCurrentUserBlocked, isReceiverBlocked, changeBlock} = useChatStore();
   const {currentUserstore} = useUserStore();
@@ -29,8 +32,24 @@ function Details() {
   return ( 
     <div className="details" id="scrollbar">
       <div className="user">
-        <img src={user?.imageLink || "src/assets/avatar.png"} alt="" />
-        <h2>{user?.name || "User"}</h2>
+        <img
+          src={user?.imageLink || "src/assets/avatar.png"} 
+          alt="" 
+          onClick={() =>{
+            navigate("/profile", {
+              state: { id: user.userID, email: user.email },
+            })
+            console.log(user);
+          }
+          }
+        />
+        <h2
+          onClick={() =>
+            navigate("/profile", {
+              state: { id: user.userID, email: user.email },
+            })
+          } 
+        >{user?.name || "User"}</h2>
         <p>{user?.headline || "-" }</p>
       </div>
       <div className="info-outer">
