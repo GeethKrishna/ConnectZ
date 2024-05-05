@@ -55,7 +55,7 @@ export default function PostsCard({ posts, id, getEditData }) {
         {currentUser.userId === posts.userID ? 
           <div className="action-container">
             <HiOutlinePencilSquare size={15} className="action-icon" onClick={() => getEditData(posts)}/>
-            <BsTrash size={15} className="action-icon" onClick={() => deletePost(posts.id) } />
+            <BsTrash size={15} className="action-icon" onClick={() => deletePost(posts,posts.id) } />
           </div> 
           : 
           <></>
@@ -75,7 +75,7 @@ export default function PostsCard({ posts, id, getEditData }) {
       </Modal>
       <LikeButton
         userId={currentUser?.userId}
-        postId={posts?.id}
+        post={posts}
         currentUser={currentUser}
       />
     </div>

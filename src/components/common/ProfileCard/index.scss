@@ -6,6 +6,7 @@
     border-radius: 5px;
     padding: 20px;
     position: relative;
+    z-index: -1;
     .edit-btn{
         position: absolute;
         right: 2%;
@@ -38,6 +39,10 @@
             border-radius: 20px;
             background-color: #0077b5;
             cursor: pointer;
+        }
+        :disabled{
+            color: black;
+            cursor:not-allowed;
         }
     }
     .profile-picture{

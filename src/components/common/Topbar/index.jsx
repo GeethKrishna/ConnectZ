@@ -70,7 +70,7 @@ export default function Topbar({ currentUser }) {
             <RiSearchLine size={25} className='react-icon' onClick={() => setIsSearch(!isSearch)} />
             <AiOutlineHome size={25} className='react-icon' onClick={()=>goToRoute('/home')} />
             <HiOutlineUsers size={25} className='react-icon' onClick={()=>goToRoute('/connections')} />
-            <HiOutlineBriefcase size={25} className='react-icon' onClick={()=>goToRoute('/jobs')}/>
+            {/* <HiOutlineBriefcase size={25} className='react-icon' onClick={()=>goToRoute('/jobs')}/> */}
             <AiOutlineMessage size={25} className='react-icon' onClick={()=>goToRoute('/messages')}/>
             <MdOutlineNotifications size={25} className='react-icon' onClick={()=>goToRoute('/notifications')}/>
         </div>

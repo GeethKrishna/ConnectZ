@@ -6,7 +6,7 @@ import { likePost, getLikeByUser, postComment, getComments } from '../../../api/
 import "./index.scss";
 import { getCurrentTimeStamp } from '../../../helpers/useMoment';
 
-export default function LikeButton({ userId, postId, currentUser }) {
+export default function LikeButton({ userId, post, currentUser }) {
 
     let navigate = useNavigate();
     const [likesCount, setLikesCount] = useState(0);
@@ -16,7 +16,7 @@ export default function LikeButton({ userId, postId, currentUser }) {
     const [comments, setComments] = useState([]);
 
     const handelLike = () => {
-        likePost(userId, postId, liked);
+        likePost(currentUser, post, liked);
     };
 
     const getCommentText = (event) => {
@@ -24,15 +24,14 @@ export default function LikeButton({ userId, postId, currentUser }) {
     };
 
     const addComment = () => {
-        postComment(postId, comment, getCurrentTimeStamp('LLL'), currentUser?.name);
+        postComment(post, comment, getCurrentTimeStamp('LLL'), currentUser);
         setComment('');
-        
     }
 
     useMemo(() => {
-        getLikeByUser(userId, postId, setLiked, setLikesCount);
-        getComments(postId,setComments);
-    },[userId,postId]);
+        getLikeByUser(userId, post.id, setLiked, setLikesCount);
+        getComments(post.id,setComments);
+    },[userId,post.id]);
 
     return (
         <div className='like-container'>
@@ -63,7 +62,7 @@ export default function LikeButton({ userId, postId, currentUser }) {
                                 <p 
                                     className='comment-name'
                                     onClick={() => navigate('/profile',{
-                                        state: {id: userId, email: currentUser?.email},
+                                        state: {id: comment.userID, email: comment.userEmail},
                                     })}
                                 >
                                     {comment.name}

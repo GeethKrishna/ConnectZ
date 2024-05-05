@@ -64,7 +64,7 @@ export default function LoginComponent() {
           onClick={googleSignIn}
         />
         <p className='new-linkedin'>
-          New to LinkedIn! <span className='join-now' onClick={() => navigate('/register')}>Join now</span>
+          New to ConnectZ ! <span className='join-now' onClick={() => navigate('/register')}>Join now</span>
         </p>
       </div>
 

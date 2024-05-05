@@ -1,3 +1,4 @@
+import { notification } from "antd";
 import { firestore } from "../firebaseConfig";
 import { addDoc,
         collection,
@@ -10,8 +11,10 @@ import { addDoc,
         deleteDoc,
         getDoc,
         serverTimestamp,
-        arrayUnion} from "firebase/firestore"
+        arrayUnion,
+        arrayRemove} from "firebase/firestore"
 import { toast } from "react-toastify";
+import { getUniqueId } from "../helpers/getUniqueId";
 
 let postsRef = collection(firestore, "posts");
 let userRef = collection(firestore, "users");
@@ -20,6 +23,7 @@ let commentRef = collection(firestore,"comments");
 let connectionsRef = collection(firestore,"connections");
 let chatsRef = collection(firestore,"chats");
 let userChatsRef = collection(firestore,"userChats");
+let notificationsRef = collection(firestore,"notifications");
 
 export const PostStatustoDB = (object) => {
     addDoc(postsRef, object)
@@ -49,6 +53,12 @@ export const getSingleStatus = (setAllStatus,id) => {
             })
         );
     });
+};
+
+export const getSinglePostById = async (id, setPost) => {
+    const postRef = doc(firestore,"posts",id);
+    const postSnap = await getDoc(postRef);
+    setPost({...postSnap.data(),id:id});
 };
 
 export const getAllUsers = (setAllUsers) => {
@@ -81,6 +91,10 @@ export const postUserData = async (object) => {
     await setDoc(doc(firestore,"userChats",object.userID),{
         chats:[],
     });
+    await setDoc(doc(firestore,"notifications",object.userID),{
+        requests:[],
+        notifications:[]
+    });
 };
 
 export const getCurrentUser = (setCurrentUser) => {
@@ -106,14 +120,52 @@ export const editProfile = (userId, payload) => {
     }); 
 };
 
-export const likePost = (userId, postId, liked) => {
+export const likePost = async (user, post, liked) => {
     try{
+        const postId = post.id;
+        const userId = user.userID;
+        const check = (obj) => {
+            if(obj.postID===postId){
+                if(obj.targetId===userId){
+                    if(obj.actionType==="Liked"){
+                        return false;
+                    }
+                    else{
+                        return true;
+                    }
+                }
+                else{
+                    return true;
+                }
+            }
+            else{
+                return true;
+            }
+        }
         let docToLike = doc(likeRef, `${userId}_${postId }` );
         if(liked){
             deleteDoc(docToLike);
+            const notiSnap = await getDoc(doc(notificationsRef,post.userID));
+            const noti = notiSnap.data();
+            console.log(noti);
+            const newrequests = noti.notifications.filter(obj => check(obj));
+            await updateDoc(doc(notificationsRef,post.userID),{
+                notifications: newrequests,
+            });
         }
         else{
             setDoc(docToLike, { userId, postId });
+            await updateDoc(doc(notificationsRef,post.userID),{
+                notifications:arrayUnion({
+                  postID: postId,
+                  notiID: getUniqueId(),
+                  targetId: user.userID,
+                  targetEmail: user.email,
+                  targetName: user.name,
+                  actionType:"Liked",
+                  updatedAt: Date.now()
+                }),
+              });
         }
     }
     catch(err){
@@ -139,9 +191,22 @@ export const getLikeByUser = (userId, postId,setLiked, setLikesCount) => {
     }
 };
 
-export const postComment = (postId, comment, timeStamp, name ) => {
+export const postComment = async (post, comment, timeStamp, user ) => {
     try{
-        addDoc(commentRef,{ postId, comment, timeStamp, name, });
+        const postId = post.id;
+        addDoc(commentRef,{ postId, comment, timeStamp, name:user.name, userID:user.userID, userEmail:user.email });
+        await updateDoc(doc(notificationsRef,post.userID),{
+            notifications:arrayUnion({
+              postID: postId,
+              notiID: getUniqueId(),
+              targetId: user.userID,
+              targetEmail: user.email,
+              targetName: user.name,
+              actionType:"Commented",
+              text:comment,
+              updatedAt: Date.now()
+            }),
+          });
     }
     catch(err){
         console.log(err);
@@ -175,7 +240,8 @@ export const updatePost = (id, status, postImage) => {
     
 };
 
-export const deletePost = (id) => {
+export const deletePost = async (post,id) => {
+    const postId = post.id;
     let postToDelete = doc(postsRef, id);
     deleteDoc(postToDelete)
     .then(() => {
@@ -184,15 +250,96 @@ export const deletePost = (id) => {
     .catch((err) => {
         console.log(err);
     }); 
+    const notiSnap = await getDoc(doc(notificationsRef,post.userID));
+    const noti = notiSnap.data();
+    console.log(noti);
+    const newrequests = noti.notifications.filter(obj => obj.postID !== postId);
+    await updateDoc(doc(notificationsRef,post.userID),{
+        notifications: newrequests,
+    });
+
 };
 
-export const addConnection = (userId, targetId) => {
+export const addConnection = async (userId, targetId) => {
     try{
         let connectionToAdd = doc(connectionsRef, `${userId}_${targetId }` );
+        let connectionToAddagain = doc(connectionsRef, `${targetId}_${userId }` );
        
-        setDoc(connectionToAdd, { userId, targetId });
+        await setDoc(connectionToAdd, { userId, targetId });
+        await setDoc(connectionToAddagain, { userId : targetId , targetId : userId });
+
+        const userNotiRef = doc(firestore,"notifications",userId);
+        const userNotiSnap = await getDoc(userNotiRef);
+
+        if(userNotiSnap.exists()) {
+          const userNotiData = userNotiSnap.data();
+
+          const notiIndex = userNotiData.requests.findIndex((c) => c.targetId ===  targetId);
+
+          userNotiData.requests[notiIndex].accepted = "accepted";
+
+          await updateDoc(userNotiRef,{
+            requests: userNotiData.requests,
+          });
+        }
+
+
+        const targetNotiRef = doc(firestore,"notifications",targetId);
+        const targetNotiSnap = await getDoc(targetNotiRef);
+
+        if(targetNotiSnap.exists()) {
+          const targetNotiData = targetNotiSnap.data();
+
+          const targetNotiIndex = targetNotiData.requests.findIndex((c) => c.targetId ===  userId);
+
+          targetNotiData.requests[targetNotiIndex].accepted = "accepted";
+
+          await updateDoc(targetNotiRef,{
+            requests: targetNotiData.requests,
+          });
+        }
+
         toast.success("Connected Successfully!");
         
+    }
+    catch(err){
+        console.log(err);
+    }
+};
+
+export const rejectRequest = async (userId, targetId ) => {
+    try{
+        const userNotiRef = doc(firestore,"notifications",userId);
+        const userNotiSnap = await getDoc(userNotiRef);
+
+        if(userNotiSnap.exists()) {
+          const userNotiData = userNotiSnap.data();
+
+          const notiIndex = userNotiData.requests.findIndex((c) => c.targetId ===  targetId);
+
+          userNotiData.requests[notiIndex].accepted = "rejected";
+
+          await updateDoc(userNotiRef,{
+            requests: userNotiData.requests,
+          });
+        }
+
+
+        const targetNotiRef = doc(firestore,"notifications",targetId);
+        const targetNotiSnap = await getDoc(targetNotiRef);
+
+        if(targetNotiSnap.exists()) {
+          const targetNotiData = targetNotiSnap.data();
+
+          const targetNotiIndex = targetNotiData.requests.findIndex((c) => c.targetId ===  userId);
+
+          targetNotiData.requests[targetNotiIndex].accepted = "rejected";
+
+          await updateDoc(targetNotiRef,{
+            requests: targetNotiData.requests,
+          });
+        }
+
     }
     catch(err){
         console.log(err);
@@ -281,4 +428,116 @@ export const addChatToChat = async (currentUser, currentProfile, setUserChat ) =
       console.log(err);
     }
     toast.success("Added Successfully to chats !");
+};
+
+export const getNotifications = async (userId,setNotifications) => {
+    try{
+        await onSnapshot(doc(firestore, "notifications", userId), (doc) => {
+            const notifications = doc.data();
+            setNotifications(notifications);
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+};
+
+export const addRequest = async (currentUser, target) => {
+    try{
+
+        const notiSnap = await getDoc(doc(notificationsRef,currentUser.userID));
+        const noti = notiSnap.data();
+        console.log(noti);
+        const newrequests = noti.requests.filter(obj => obj.targetId !== target.userID);
+        await updateDoc(doc(notificationsRef,currentUser.userID),{
+            requests: newrequests,
+          });
+
+        const notiSnapa = await getDoc(doc(notificationsRef,target.userID));
+        const notia = notiSnapa.data();
+        console.log(notia);
+        const newrequestsa = notia.requests.filter(obj => obj.targetId !== currentUser.userID);
+        await updateDoc(doc(notificationsRef,target.userID),{
+            requests: newrequestsa,
+          });
+
+        await updateDoc(doc(notificationsRef,currentUser.userID),{
+            requests:arrayUnion({
+              targetId: target.userID,
+              targetEmail: target.email,
+              targetName: target.name,
+              received: false,
+              accepted: "pending",
+              updatedAt: Date.now()
+            }),
+          });
+        await updateDoc(doc(notificationsRef,target.userID),{
+            requests:arrayUnion({
+              targetId: currentUser.userID,
+              targetEmail: currentUser.email,
+              targetName: currentUser.name,
+              received: true,
+              accepted: "pending",
+              updatedAt: Date.now()
+            }),
+          });
+        toast.success("Connection Request sent !");
+    }
+    catch(err){
+        console.error(err);
+    }
+};
+
+export const removeRequest = async (userId, targetId) => {
+    try{
+        const notiSnap = await getDoc(doc(notificationsRef,userId));
+        const noti = notiSnap.data();
+        console.log(noti);
+        const newrequests = noti.requests.filter(obj => obj.targetId !== targetId);
+        await updateDoc(doc(notificationsRef,userId),{
+            requests: newrequests,
+          });
+    }
+    catch(err){
+        console.error(err);
+    }
+};
+
+
+export const addNotificationsToAll = async (allUsers) => {
+    allUsers.forEach(async (user) => {
+        await setDoc(doc(firestore,"notifications",user.userID),{
+            requests:[],
+            notifications:[]
+        });
+    });
+};
+
+export const findRequest = async (userId, targetId, setRequest ) => {
+    try{
+        await onSnapshot(doc(firestore, "notifications", userId), (doc) => {
+            const userChat = doc.data();
+            const chat = userChat.requests.find((c) => c.targetId === targetId );
+            //console.log(chat);
+            setRequest(chat);
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+};
+
+export const removeNotification = async (userId, notiId) => {
+    try{
+        const notiSnap = await getDoc(doc(notificationsRef,userId));
+        const noti = notiSnap.data();
+        console.log(noti);
+        const newrequests = noti.notifications.filter(obj => obj.notiID !== notiId);
+        await updateDoc(doc(notificationsRef,userId),{
+            notifications: newrequests,
+          });
+    }
+    catch(err){
+        console.error(err);
+    }
 };

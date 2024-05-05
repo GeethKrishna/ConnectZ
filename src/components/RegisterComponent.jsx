@@ -91,7 +91,7 @@ export default function RegisterComponent() {
           onClick={googleSignIn}
         />
         <p className='new-linkedin'>
-          Already on LinkedIn! <span className='join-now' onClick={() => navigate('/')}>Sign in</span>
+          Already on ConnectZ ! <span className='join-now' onClick={() => navigate('/')}>Sign in</span>
         </p>
       </div>
 

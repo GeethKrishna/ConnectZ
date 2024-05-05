@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import PostsCard from "../PostsCard/index"
-import { addConnection, getSingleStatus, getSingleUser, getConnections, findUserInChats, addChatToChat} from '../../../api/FirestoreApi';
+import { removeRequest, getSingleStatus, getSingleUser, getConnections, findUserInChats, addChatToChat, addRequest, findRequest} from '../../../api/FirestoreApi';
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import ImageUploadModal from '../ImageUploadModal';
 import { uploadImageApi } from '../../../api/ImageUpload';
@@ -24,6 +24,7 @@ export default function ProfileCard({ currentUser, onEdit }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [connected,setConnected] = useState(false);
   const [userChat,setUserChat] = useState();
+  const [request,setRequest] = useState();
 
 
 
@@ -38,7 +39,10 @@ export default function ProfileCard({ currentUser, onEdit }) {
 
   const handleConnect = () => {
     if (!connected){
-      addConnection(currentUser.userId,location?.state?.id);
+      //addConnection(currentUser.userId,location?.state?.id);
+      //removeRequest(currentUser.userId,location?.state?.id);
+      //removeRequest(location?.state?.id,currentUser.userId);
+      addRequest(currentUser,currentProfile);
     }
       else{
         return ;
@@ -78,7 +82,8 @@ export default function ProfileCard({ currentUser, onEdit }) {
 
   useEffect(() => {
     getConnections(currentUser.userId,location?.state?.id,setConnected);
-    findUserInChats(currentUser.userId,location?.state?.id,setUserChat)
+    findUserInChats(currentUser.userId,location?.state?.id,setUserChat);
+    findRequest(currentUser.userId,location?.state?.id,setRequest);
   }, [currentUser.userId,location?.state,connected]);
 
   return (
@@ -142,14 +147,14 @@ export default function ProfileCard({ currentUser, onEdit }) {
             <button 
               className={connected? "connected" : "connect"} 
               onClick={handleConnect}
-              disabled = {connected}
+              disabled = {connected ? true : request ? request.accepted==="pending" ? true : false : false }
               >
-                {connected ? "Connected" : "Connect"}
+                {connected ? "Connected" : request ? request.accepted==="pending" ? "request sent" : "Connect" : "Connect"}
               </button>
           :
           <></>
         }
-          <button onClick={handelMessage} className='connect'>{userChat ? "Send Message" : "Add to Message"}</button>
+          {!loginUser&&<button onClick={handelMessage} className='connect'>{userChat ? "Send Message" : "Add to Message"}</button>}
         </div>
       </div>
 

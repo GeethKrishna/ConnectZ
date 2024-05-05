@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { getAllUsers, addConnection } from "../api/FirestoreApi";
+import { useEffect, useState } from 'react';
+import { getAllUsers, addRequest } from "../api/FirestoreApi";
 import "../Sass/ConnectionsComponent.scss";
 import ConnectedUsers from './common/ConnectedUsers';
 
@@ -7,8 +7,8 @@ export default function ConnectionsComponent({ currentUser }) {
 
   const [users, setUsers] = useState([]);
 
-  const getCurrentUser = (id) => {
-    addConnection(currentUser.userId,id);
+  const getCurrentUser = (currentProfile) => {
+    addRequest(currentUser,currentProfile);
     //console.log(currentUser);
   };
 
